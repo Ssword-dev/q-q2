@@ -25,4 +25,4 @@ try {
 
 
 header("Cache-Control: max-age=28800"); // tell browser to cache for an 8 hours.
-sendJSONResponse(200, c_getYear($year - 0));
+sendJSONResponse(200, c_getYear('PH', null, $year - 0));

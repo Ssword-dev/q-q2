@@ -68,7 +68,26 @@ function c_getChineseZodiacAnimal($year)
     return $chineseZodiacAnimals[($year - 1960) % 12];
 }
 
-function c_getYear($year)
+function c_getHolidays($country, $subdiv, $year)
+{
+    $url = "http://localhost:5000/api/holidays/$country/$year?subdiv=$subdiv";
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        die("cURL Error: " . curl_error($ch));
+    }
+
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+    return $data;
+}
+
+function c_getYear($country, $subdiv, $year)
 {
     $meta_months = [];
     $month = 1;
@@ -85,6 +104,7 @@ function c_getYear($year)
         'months' => $meta_months,
         'zodiac' => [
             'chinese' => c_getChineseZodiacAnimal($year)
-        ]
+        ],
+        'holidays' => c_getHolidays($country, $subdiv, $year)
     ];
 }
