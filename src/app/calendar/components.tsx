@@ -15,7 +15,10 @@ import {
   CalendarTableProps,
   CalendarTableWrapperProps,
   CalendarPageState,
+  CalendarHolidayCellProps,
 } from "./types";
+import Hitbox from "../components/utils/hitbox";
+import { Card, CardContent, CardTitle } from "@/app/components/ui/card";
 
 // this should not be memoized. this is stateful.
 export function CalendarControls({ state }: { state: CalendarPageState }) {
@@ -76,14 +79,47 @@ export const CalendarTableHeader = React.memo(
   }
 );
 
+export const EmptyCalendarDayCell = () => {
+  return (
+    <td className="border border-gray-400 w-10 h-10 text-center">&nbsp;</td>
+  );
+};
+
+export const CalendarSundayCell = ({ day }: CalendarDayCellProps) => {
+  return (
+    <td className="border border-gray-400 w-10 h-10 text-center text-primary">
+      {day}
+    </td>
+  );
+};
+
 export const CalendarDayCell = ({ day }: CalendarDayCellProps) => {
   return (
-    <td
-      className={cn("border border-gray-400 w-10 h-10 text-center", {
-        "text-primary": day && day.isHoliday,
-      })}
-    >
-      {day ? day.day : ""}
+    <td className="border border-gray-400 w-10 h-10 text-center">{day}</td>
+  );
+};
+
+export const CalendarHolidayCell = ({
+  day,
+  holidayName,
+}: CalendarHolidayCellProps) => {
+  return (
+    <td className="border border-gray-400 w-10 h-10 text-center">
+      <HoverCard>
+        <Hitbox className="flex flex-col justify-center items-center h-full w-full text-secondary">
+          <HoverCardTrigger className="flex flex-col justify-center items-center h-full w-full">
+            {day}
+          </HoverCardTrigger>
+        </Hitbox>
+        <HoverCardContent className="w-80 rounded-lg bg-surface">
+          <Card>
+            <CardTitle>{holidayName}</CardTitle>
+            <CardContent>
+              &ldquo;{holidayName}&rdquo; is a Holiday in a phillipines.
+            </CardContent>
+          </Card>
+        </HoverCardContent>
+      </HoverCard>
     </td>
   );
 };
@@ -95,9 +131,21 @@ export const CalendarTableBody = React.memo(function CalendarTableBody({
     <tbody>
       {tableData.map((week, wi) => (
         <tr key={wi}>
-          {week.map((day, di) => (
-            <CalendarDayCell day={day} key={di} />
-          ))}
+          {week.map((day, di) =>
+            !day ? (
+              <EmptyCalendarDayCell key={di} />
+            ) : day.isHoliday ? (
+              <CalendarHolidayCell
+                day={day.day}
+                holidayName={day.holidayName}
+                key={di}
+              />
+            ) : day.index === 0 ? (
+              <CalendarSundayCell day={day.day} key={di} />
+            ) : (
+              <CalendarDayCell day={day.day} key={di} />
+            )
+          )}
         </tr>
       ))}
     </tbody>

@@ -1,15 +1,17 @@
 import "../tailwind.css";
 import { ReactElement, useState, useRef, useEffect, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+
 import {
   CalendarTableWrapper,
   CalendarTable,
   CalendarTableHeader,
   CalendarTableBody,
   CalendarControls,
-} from "./components";
-import { goto } from "./functions";
-import { CalendarDay, CalendarPageState } from "./types";
+  goto,
+  CalendarDay,
+  CalendarPageState,
+} from ".";
 
 export function CalendarPage(): ReactElement {
   const today = new Date();

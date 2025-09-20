@@ -1,6 +1,38 @@
 import { spawn } from "node:child_process";
 import EventEmitter from "node:events";
 
+const MAX_START_PENDING_RETRIES = 100;
+
+function yieldToEventLoop(ms: number): Promise<void> {
+  return new Promise<void>((res) => setTimeout(() => res(), ms));
+}
+
+async function runCommand(cmd: string, args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let output = "";
+    const proc = spawn("sc", args, { windowsHide: true });
+
+    proc.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    proc.stderr.on("data", (data) => {
+      output += data.toString();
+    });
+
+    proc.on("exit", (code) => {
+      if (code === 0) {
+        resolve(output);
+      } else {
+        reject(new Error(output.trim() || `${cmd} ${args.join(" ")} failed`));
+      }
+    });
+
+    proc.on("error", (err) => {
+      reject(err);
+    });
+  });
+}
 class Service extends EventEmitter {
   exited: boolean;
   killed: boolean;
@@ -46,30 +78,60 @@ class Service extends EventEmitter {
     });
   }
 
-  private async query(): Promise<"STOPPED" | "RUNNING" | "OTHER"> {
+  private async runNetCommand(args: string[]) {
+    return await runCommand("net", args);
+  }
+
+  private async query(): Promise<string | null> {
     const result = await this.runScCommand(["query", this.name]);
-    if (/STATE\s*:\s*\d+\s+RUNNING/i.test(result)) {
-      return "RUNNING";
+    const match = /STATE\s*:\s*\d+\s+([a-zA-Z_]+)/i.exec(result);
+
+    if (!match) {
+      return null;
     }
-    if (/STATE\s*:\s*\d+\s+STOPPED/i.test(result)) {
-      return "STOPPED";
-    }
-    return "OTHER";
+
+    return match[1];
   }
 
   async start(): Promise<void> {
     await this.runScCommand(["start", this.name]);
-    const state = await this.query();
-    if (state !== "RUNNING") {
+    let pendingCount = 0;
+
+    while (true) {
+      const state = await this.query();
+      if (state === "START_PENDING") {
+        pendingCount++;
+
+        if (pendingCount >= MAX_START_PENDING_RETRIES) {
+          console.error(`Starting service '${this.name}' took too long.`);
+          break;
+        }
+
+        await yieldToEventLoop(30);
+        continue;
+      }
+
+      if (state === "RUNNING") {
+        break;
+      }
+
       throw new Error(`Service ${this.name} failed to start (state=${state}).`);
     }
   }
 
   async stop(): Promise<void> {
-    await this.runScCommand(["STOP", this.name]);
+    await this.runScCommand(["stop", this.name]);
     const state = await this.query();
+
     if (state !== "STOPPED") {
-      throw new Error(`Service ${this.name} failed to stop (state=${state}).`);
+      await this.runNetCommand(["stop", this.name]);
+      const newState = await this.query();
+
+      if (newState !== null || newState!.trim() === "") {
+        throw new Error(
+          `Failed to stop ${this.name} with both 'sc' and 'net'. (state=${newState})`
+        );
+      }
     }
   }
 

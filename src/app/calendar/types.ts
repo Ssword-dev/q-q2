@@ -7,7 +7,10 @@ export interface CalendarControlsProps {
 
 export interface CalendarDay {
   day: number;
+  timestamp: number;
+  index: number;
   isHoliday: boolean;
+  holidayName: string;
 }
 
 export interface CardTableBodyProps {
@@ -15,7 +18,11 @@ export interface CardTableBodyProps {
 }
 
 export interface CalendarDayCellProps {
-  day: CalendarDay | null;
+  day: number;
+}
+
+export interface CalendarHolidayCellProps extends CalendarDayCellProps {
+  holidayName: string;
 }
 
 export interface CalendarTableProps extends React.PropsWithChildren {

@@ -58,7 +58,7 @@ export async function goto(
       week[cx] = {
         ...monthData.days[p++],
         isHoliday: isHoliday,
-        holidayInformation: isHoliday ? holidays[ymdKey] : null,
+        holidayName: isHoliday ? holidays[ymdKey] : null,
       };
       cx++;
     }

@@ -240,7 +240,8 @@ class App {
   bindLifecycle() {
     const arrow = this.dispose.bind(this);
 
-    process.on("beforeExit", arrow).on("SIGINT", arrow).on("SIGTERM", arrow);
+    process.on("SIGINT", arrow).on("SIGTERM", arrow);
+    return this;
   }
 
   public enterCritical(cb: () => Promise<any>) {
