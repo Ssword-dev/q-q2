@@ -1,5 +1,5 @@
 // React
-import React, { ReactElement } from "react";
+import React, { PropsWithChildren, ReactElement, useEffect } from "react";
 
 // utilities
 import { cn } from "@/app/lib/utils";
@@ -23,6 +23,9 @@ import {
 } from "@/app/lib/components/ui/form";
 import { Input } from "@/app/lib/components/ui/input";
 import { Separator } from "../lib/components/ui/separator";
+
+// framer motion
+import { motion } from "framer-motion";
 
 // lucide react
 import {} from "lucide-react";
@@ -58,6 +61,7 @@ import {
   CalendarPageState,
   CalendarHolidayCellProps,
   CalendarDay,
+  StatefulComponentProps,
 } from "./types";
 
 const yearSchema = z.preprocess(
@@ -139,7 +143,7 @@ export function CalendarFormField({
 // this is tabbed.
 // first tab is basic tab, does not have the
 // one with country and subdivision specification.
-export function CalendarControlModal({ state }: { state: CalendarPageState }) {
+export function CalendarControlModal({ state }: StatefulComponentProps) {
   const resolver = zodResolver<
     CalendarControlSchemaInputType,
     unknown,
@@ -152,7 +156,6 @@ export function CalendarControlModal({ state }: { state: CalendarPageState }) {
   >({
     resolver,
   });
-  const { currentMonth, currentYear } = state;
   const { handleSubmit: createOnSubmit, control } = form;
 
   const handleValidFormSubmit = ({
@@ -202,15 +205,54 @@ export function CalendarControlModal({ state }: { state: CalendarPageState }) {
         </TabsContent>
         <TabsContent value="advanced">
           <CardTitle>Advanced Calendar Settings</CardTitle>
-          <CardContent> </CardContent>
+          <CardContent>
+            <Form {...form}>
+              <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
+                <CalendarFormField
+                  label="Year"
+                  name="year"
+                  control={control as unknown as Control}
+                />
+                <CalendarFormField
+                  label="Month"
+                  name="month"
+                  control={control as unknown as Control}
+                />
+                <Button type="submit">Submit</Button>
+              </form>
+            </Form>
+          </CardContent>
         </TabsContent>
       </Tabs>
     </Card>
   );
 }
 
-export function CalendarControls({ state }: { state: CalendarPageState }) {
-  const { currentMonth, currentYear } = state;
+export function CalendarControlButton({
+  state,
+  offset = 1,
+  disabled = false,
+  children,
+}: StatefulComponentProps &
+  PropsWithChildren<{ offset: number; disabled: boolean }>) {
+  return (
+    <Button asChild>
+      <motion.button
+        initial={{ scale: 1 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
+        className="text-primary select-none"
+        onClick={() => setMonth(offset, state)}
+        disabled={disabled}
+      >
+        {children}
+      </motion.button>
+    </Button>
+  );
+}
+
+export function CalendarControls({ state }: StatefulComponentProps) {
   return (
     <>
       {/**
@@ -220,33 +262,33 @@ export function CalendarControls({ state }: { state: CalendarPageState }) {
        * 1970.
        */}
       <div className="flex justify-between items-center mb-4 w-full">
-        <Button
-          className="text-primary select-none"
-          onClick={() => setMonth(-1, state)}
-          disabled={currentMonth <= 0 && currentYear <= 1970}
+        <CalendarControlButton
+          state={state}
+          offset={-1}
+          disabled={state.currentMonth <= 0 && state.currentYear <= 1970}
         >
           Prev
-        </Button>
+        </CalendarControlButton>
 
         <div className="flex flex-col justify-center font-bold">
           <Popover modal>
             <PopoverTrigger asChild>
-              <Button>
-                {monthNames[currentMonth]} {currentYear}
+              <Button variant="secondary">
+                {monthNames[state.currentMonth]} {state.currentYear}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="bg-transparent border-none p-0">
+            <PopoverContent
+              side="bottom"
+              className="bg-transparent border-none p-0"
+            >
               <CalendarControlModal state={state} />
             </PopoverContent>
           </Popover>
         </div>
 
-        <Button
-          className="text-primary select-none"
-          onClick={() => setMonth(1, state)}
-        >
+        <CalendarControlButton state={state} offset={1} disabled={false}>
           Next
-        </Button>
+        </CalendarControlButton>
       </div>
     </>
   );

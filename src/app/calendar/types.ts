@@ -58,3 +58,7 @@ export interface CalendarPageState {
   setTableData: React.Dispatch<Array<Array<CalendarDay | null>>>;
   cacheRef: React.RefObject<Record<string, any>>;
 }
+
+export interface StatefulComponentProps {
+  state: CalendarPageState;
+}

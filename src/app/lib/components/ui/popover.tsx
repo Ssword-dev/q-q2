@@ -49,21 +49,15 @@ interface PopoverTriggerProps
 }
 
 function PopoverTrigger({ anchor = false, ...props }: PopoverTriggerProps) {
-  const jsx = React.useMemo(() => {
-    if (anchor) {
-      return (
-        <PopoverPrimitive.Anchor>
-          <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
-        </PopoverPrimitive.Anchor>
-      );
-    } else {
-      return (
+  if (anchor) {
+    return (
+      <PopoverPrimitive.Anchor>
         <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
-      );
-    }
-  }, [anchor]);
-
-  return jsx;
+      </PopoverPrimitive.Anchor>
+    );
+  } else {
+    return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
+  }
 }
 
 type BasePopoverContentProps = React.ComponentProps<
