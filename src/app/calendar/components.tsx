@@ -1,31 +1,216 @@
-import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from "@radix-ui/react-hover-card";
+// React
 import React, { ReactElement } from "react";
-import { Button } from "../components/ui/button";
-import { monthNames, dayNames } from "./constants";
-import { setMonth, ucfirst } from "./functions";
+
+// utilities
+import { cn } from "@/app/lib/utils";
+
+// Components
+import { Button } from "@/app/lib/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/app/lib/components/ui/card";
 import {
-  CalendarControlsProps,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/app/lib/components/ui/popover";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/app/lib/components/ui/form";
+import { Input } from "@/app/lib/components/ui/input";
+import { Separator } from "../lib/components/ui/separator";
+
+// lucide react
+import {} from "lucide-react";
+
+import {
+  Tabs,
+  TabsList,
+  TabsContent,
+  TabsTrigger,
+} from "@/app/lib/components/ui/tabs";
+
+// validation library
+import z from "zod";
+
+// forms
+import { Control, useForm } from "react-hook-form";
+
+// rhf + zod integration
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// constants
+import { monthNames, dayNames, monthIndexes } from "./constants";
+
+// environment functions
+import { goto, setMonth } from "./functions";
+
+// types
+import {
   CalendarDayCellProps,
   CardTableBodyProps,
   CalendarTableProps,
   CalendarTableWrapperProps,
   CalendarPageState,
   CalendarHolidayCellProps,
+  CalendarDay,
 } from "./types";
-import Hitbox from "../components/utils/hitbox";
-import { Card, CardContent, CardTitle } from "@/app/components/ui/card";
 
-// this should not be memoized. this is stateful.
+const yearSchema = z.preprocess(
+  (inp) => {
+    console.log(JSON.stringify(inp));
+    if (typeof inp !== "string") {
+      return inp;
+    }
+
+    if (/\d+/.test(inp)) {
+      return parseInt(inp);
+    }
+
+    return inp;
+  },
+  z
+    .number({
+      error: "year must be a number",
+    })
+    .min(1970, {
+      error: "year must be 1970 or later.",
+    })
+    .max(9999, {
+      error: "year must be reasonable.",
+    })
+);
+
+const monthSchema = z.union([
+  // numeric.
+  z
+    .int()
+    .min(1, { error: "month must be greater than or equal 1 (January)." })
+    .max(12, { error: "month must be less than or equal 12 (December)." }),
+  // string
+  z.preprocess((val) => {
+    if (typeof val !== "string") return val;
+    // Normalize first letter uppercase, rest lowercase
+    return val[0].toUpperCase() + val.slice(1).toLowerCase();
+  }, z.enum(monthNames)),
+]);
+
+const calendarControlSchema = z.object({
+  year: yearSchema,
+  month: monthSchema,
+});
+
+// infered types.
+type CalendarControlSchemaType = z.infer<typeof calendarControlSchema>;
+type CalendarControlSchemaInputType = z.input<typeof calendarControlSchema>;
+
+// text field of calendar.
+export function CalendarFormField({
+  name,
+  label,
+  control,
+}: {
+  name: string;
+  label: string;
+  control: Control;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field: { value, ...field } }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input value={(value as string) ?? ""} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+// calendar control modal.
+// this is tabbed.
+// first tab is basic tab, does not have the
+// one with country and subdivision specification.
+export function CalendarControlModal({ state }: { state: CalendarPageState }) {
+  const resolver = zodResolver<
+    CalendarControlSchemaInputType,
+    unknown,
+    CalendarControlSchemaType
+  >(calendarControlSchema);
+  const form = useForm<
+    CalendarControlSchemaInputType,
+    unknown,
+    CalendarControlSchemaType
+  >({
+    resolver,
+  });
+  const { currentMonth, currentYear } = state;
+  const { handleSubmit: createOnSubmit, control } = form;
+
+  const handleValidFormSubmit = ({
+    year,
+    month,
+  }: CalendarControlSchemaType) => {
+    let monthIndex;
+
+    if (typeof month === "string") {
+      monthIndex = monthIndexes[month];
+    } else {
+      monthIndex = month;
+    }
+
+    goto(year, monthIndex, state);
+  };
+
+  const onSubmit = createOnSubmit(handleValidFormSubmit);
+
+  return (
+    <Card className="z-10 h-full w-full px-4 py-2">
+      <Tabs>
+        <TabsList className="flex flex-row justify-between w-full">
+          <TabsTrigger value="basic">Basic</TabsTrigger>
+          <Separator orientation="vertical" />
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+        </TabsList>
+        <TabsContent value="basic">
+          <CardTitle>Calendar Settings</CardTitle>
+          <CardContent className="flex flex-col gap-6">
+            <Form {...form}>
+              <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
+                <CalendarFormField
+                  label="Year"
+                  name="year"
+                  control={control as unknown as Control}
+                />
+                <CalendarFormField
+                  label="Month"
+                  name="month"
+                  control={control as unknown as Control}
+                />
+                <Button type="submit">Submit</Button>
+              </form>
+            </Form>
+          </CardContent>
+        </TabsContent>
+        <TabsContent value="advanced">
+          <CardTitle>Advanced Calendar Settings</CardTitle>
+          <CardContent> </CardContent>
+        </TabsContent>
+      </Tabs>
+    </Card>
+  );
+}
+
 export function CalendarControls({ state }: { state: CalendarPageState }) {
-  const { currentMonth, currentYear, cacheRef } = state;
-  const cache = cacheRef.current;
-  const yearOfAnimal: string | undefined =
-    cache[`${currentYear}`]?.zodiac?.chinese;
+  const { currentMonth, currentYear } = state;
   return (
     <>
       {/**
@@ -42,16 +227,20 @@ export function CalendarControls({ state }: { state: CalendarPageState }) {
         >
           Prev
         </Button>
-        <HoverCard>
-          <HoverCardTrigger>
-            <div className="flex flex-col justify-center font-bold">
-              {monthNames[currentMonth]} {currentYear}
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent className="bg-surface">
-            {` Year of the ${yearOfAnimal ? ucfirst(yearOfAnimal) : ""}`}
-          </HoverCardContent>
-        </HoverCard>
+
+        <div className="flex flex-col justify-center font-bold">
+          <Popover modal>
+            <PopoverTrigger asChild>
+              <Button>
+                {monthNames[currentMonth]} {currentYear}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="bg-transparent border-none p-0">
+              <CalendarControlModal state={state} />
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <Button
           className="text-primary select-none"
           onClick={() => setMonth(1, state)}
@@ -101,53 +290,67 @@ export const CalendarDayCell = ({ day }: CalendarDayCellProps) => {
 
 export const CalendarHolidayCell = ({
   day,
-  holidayName,
+  holidayMetadata,
 }: CalendarHolidayCellProps) => {
   return (
-    <td className="border border-gray-400 w-10 h-10 text-center">
-      <HoverCard>
-        <Hitbox className="flex flex-col justify-center items-center h-full w-full text-secondary">
-          <HoverCardTrigger className="flex flex-col justify-center items-center h-full w-full">
+    <td className="border border-gray-400 w-10 h-10 text-center relative">
+      <Popover modal>
+        <PopoverTrigger anchor asChild>
+          <button className="w-full h-full flex items-center justify-center text-secondary">
             {day}
-          </HoverCardTrigger>
-        </Hitbox>
-        <HoverCardContent className="w-80 rounded-lg bg-surface">
-          <Card>
-            <CardTitle>{holidayName}</CardTitle>
+          </button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="center"
+          side="top"
+          sideOffset={5}
+          className="min-w-20 rounded-lg bg-surface p-0 border-none"
+        >
+          <Card className="opacity-100 px-4 py-2">
+            <CardTitle className="italic">{holidayMetadata.name}</CardTitle>
             <CardContent>
-              &ldquo;{holidayName}&rdquo; is a Holiday in a phillipines.
+              &ldquo;{holidayMetadata.description.shortDescription}&rdquo;
             </CardContent>
           </Card>
-        </HoverCardContent>
-      </HoverCard>
+        </PopoverContent>
+      </Popover>
     </td>
   );
 };
+
+export function CalendarDayDisplay({ day }: { day: CalendarDay | null }) {
+  return !day ? (
+    <EmptyCalendarDayCell />
+  ) : day.isHoliday ? (
+    <CalendarHolidayCell {...day} />
+  ) : day.index === 0 ? (
+    <CalendarSundayCell {...day} />
+  ) : (
+    <CalendarDayCell {...day} />
+  );
+}
+
+export function CalendarTableData({
+  data,
+}: {
+  data: Array<Array<CalendarDay | null>>;
+}) {
+  return data.map((week, wi) => (
+    <tr key={wi}>
+      {week.map((day, di) => (
+        <CalendarDayDisplay day={day} key={di} />
+      ))}
+    </tr>
+  ));
+}
 
 export const CalendarTableBody = React.memo(function CalendarTableBody({
   tableData,
 }: CardTableBodyProps): ReactElement {
   return (
     <tbody>
-      {tableData.map((week, wi) => (
-        <tr key={wi}>
-          {week.map((day, di) =>
-            !day ? (
-              <EmptyCalendarDayCell key={di} />
-            ) : day.isHoliday ? (
-              <CalendarHolidayCell
-                day={day.day}
-                holidayName={day.holidayName}
-                key={di}
-              />
-            ) : day.index === 0 ? (
-              <CalendarSundayCell day={day.day} key={di} />
-            ) : (
-              <CalendarDayCell day={day.day} key={di} />
-            )
-          )}
-        </tr>
-      ))}
+      <CalendarTableData data={tableData} />
     </tbody>
   );
 });

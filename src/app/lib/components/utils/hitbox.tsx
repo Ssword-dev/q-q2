@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/app/lib/utils";
 import { PropsWithChildren, useMemo } from "react";
 
 interface HitboxProps extends PropsWithChildren {

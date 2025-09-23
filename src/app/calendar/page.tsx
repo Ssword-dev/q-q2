@@ -1,5 +1,12 @@
 import "../tailwind.css";
-import { ReactElement, useState, useRef, useEffect, StrictMode } from "react";
+import {
+  ReactElement,
+  useState,
+  useRef,
+  useEffect,
+  StrictMode,
+  useMemo,
+} from "react";
 import { createRoot } from "react-dom/client";
 
 import {
@@ -21,16 +28,28 @@ export function CalendarPage(): ReactElement {
     []
   );
   const cacheRef = useRef<Record<string, any>>({});
-  const state: CalendarPageState = {
-    today,
-    currentMonth,
-    currentYear,
-    tableData,
-    setCurrentMonth,
-    setCurrentYear,
-    setTableData,
-    cacheRef,
-  };
+  const state: CalendarPageState = useMemo(
+    () => ({
+      today,
+      currentMonth,
+      currentYear,
+      tableData,
+      setCurrentMonth,
+      setCurrentYear,
+      setTableData,
+      cacheRef,
+    }),
+    [
+      today,
+      currentMonth,
+      currentYear,
+      tableData,
+      setCurrentMonth,
+      setCurrentYear,
+      setTableData,
+      cacheRef,
+    ]
+  );
 
   useEffect(() => {
     goto(currentYear, currentMonth, state);

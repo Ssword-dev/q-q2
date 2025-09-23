@@ -5,25 +5,40 @@ export interface CalendarControlsProps {
   cache: Record<string, any>;
 }
 
-export interface CalendarDay {
+export interface HolidayDescription {
+  shortDescription: string;
+  longDescription: string;
+}
+
+export interface Day {
   day: number;
   timestamp: number;
   index: number;
-  isHoliday: boolean;
-  holidayName: string;
+  isHoliday: false;
 }
+
+export interface HolidayMetadata {
+  description: HolidayDescription;
+  name: string;
+}
+
+export interface Holiday {
+  day: number;
+  timestamp: number;
+  index: number;
+  isHoliday: true;
+  holidayMetadata: HolidayMetadata;
+}
+
+export type CalendarDay = Day | Holiday;
 
 export interface CardTableBodyProps {
   tableData: Array<Array<CalendarDay | null>>;
 }
 
-export interface CalendarDayCellProps {
-  day: number;
-}
+export interface CalendarDayCellProps extends Day {}
 
-export interface CalendarHolidayCellProps extends CalendarDayCellProps {
-  holidayName: string;
-}
+export interface CalendarHolidayCellProps extends Holiday {}
 
 export interface CalendarTableProps extends React.PropsWithChildren {
   isLoading?: boolean;

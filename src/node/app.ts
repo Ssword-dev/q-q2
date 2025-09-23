@@ -1,8 +1,13 @@
 import express from "express";
+
+// proxy + caching
 import {
   createProxyMiddleware,
+  proxyEventsPlugin,
   Options as HTTPProxyMiddlewareOptions,
 } from "http-proxy-middleware";
+
+import { LRUCache as LRU } from "lru-cache";
 
 // vite
 import {
@@ -27,8 +32,6 @@ import {
 } from "node:child_process";
 import EventEmitter from "node:events";
 import { Service } from "./service";
-
-Service;
 
 class Builder {
   owner: App | null;
@@ -128,6 +131,15 @@ class ServiceBuilder extends Builder {
   }
 }
 
+interface ProxyOptions extends HTTPProxyMiddlewareOptions {
+  createKey(path: string): string;
+}
+
+interface ProxyCacheItem {
+  body: Uint8Array;
+  headers: Record<string, any>;
+}
+
 class App {
   private _express: express.Express;
   private _server: Server | null;
@@ -176,12 +188,52 @@ class App {
       await s.dispose();
       console.log(`Disposed ${s.name}`);
     }
+
+    process.exit(0);
   }
 
   addProxy(route: string, options: HTTPProxyMiddlewareOptions) {
     this._express.use(route, createProxyMiddleware(options));
     return this;
   }
+
+  // addProxy(route: string, { createKey, ...options }: ProxyOptions) {
+  //   const cache = new LRU({
+  //     max: 100,
+  //     ttl: 60 * 60 * 24 * 7,
+  //   });
+
+  //   const base = createProxyMiddleware({
+  //     ...options,
+  //     selfHandleResponse: true,
+  //     on: {
+  //       proxyRes(proxyRes, req, res) {
+  //         const chunks: (string | Buffer)[] = [];
+
+  //         proxyRes.on("data", (chunk) => {
+  //           res.write(chunk);
+  //           chunks.push(...chunk);
+  //         });
+
+  //         proxyRes.on("end", () => {
+  //           res.end(); // end this early.
+
+  //           const flattened = [];
+
+  //           for (const chunk of chunks) {
+  //             let buffer = chunk;
+
+  //             if (typeof chunk === "string") {
+  //               buffer = Buffer.from(new TextEncoder().encode(chunk));
+  //             }
+  //           }
+  //         });
+  //       },
+  //     },
+  //   });
+  //
+  //   return this;
+  // }
 
   addWatcher(
     paths: string | string[],

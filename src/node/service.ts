@@ -94,6 +94,12 @@ class Service extends EventEmitter {
   }
 
   async start(): Promise<void> {
+    const query = await this.query();
+
+    if (["START_PENDING", "RUNNING"].includes(query!)) {
+      return; // already started.
+    }
+
     await this.runScCommand(["start", this.name]);
     let pendingCount = 0;
 
