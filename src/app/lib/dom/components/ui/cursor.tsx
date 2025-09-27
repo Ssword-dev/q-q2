@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import useCursor, { BoundTarget } from "@/app/lib/hooks/useCursor";
+import useCursor, { BoundTarget } from "@/app/lib/shared/hooks/useCursor";
 import { cn } from "@/app/lib/utils";
 
 interface CursorProps extends React.ComponentProps<"div"> {

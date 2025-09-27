@@ -97,7 +97,6 @@ function useCursor(
   bound: BoundTarget = typeof window !== "undefined" ? window : null,
   debounce: number = 0
 ): Cursor {
-  console.log(bound);
   const [vec, setVec] = useState<Vector2D>({
     from: { x: 0, y: 0 },
     to: { x: 0, y: 0 },
@@ -116,7 +115,7 @@ function useCursor(
     // resolve bound dynamically
     const target = bound && "current" in bound ? bound.current : bound;
 
-    if (!target) return; // still null → skip until next render
+    if (!target) return; // skip till next render if no target
 
     const controller = new AbortController();
     const { signal } = controller;

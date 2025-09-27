@@ -1,29 +1,95 @@
-import useCursor from "@/app/lib/hooks/useCursor";
-import "../tailwind.css";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import {
+  PerspectiveCamera,
+  OrbitControls,
+  Sphere,
+  Text,
+  Stars,
+  Line,
+} from "@react-three/drei";
+import { Suspense, useRef } from "react";
+import * as THREE from "three";
 import { createRoot } from "react-dom/client";
-import { Card, CardContent, CardTitle } from "@/app/lib/components/ui/card";
-import Cursor from "../lib/components/ui/cursor";
-import { useRef } from "react";
-import { SwordIcon } from "lucide-react";
+import * as BoxPrimitive from "@/app/lib/three/components/box";
+import GravitatedBall from "@/app/lib/three/components/gravitated-ball";
 
-function TestPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+import "../tailwind.css";
+
+function AxisLabels() {
   return (
-    <>
-      <Card ref={containerRef}>
-        <CardTitle>Sword Cursor</CardTitle>
-        <CardContent>Hover me to change your cursor to a sword.</CardContent>
-        <Cursor
-          bound={containerRef}
-          className={`
-            w-max h-max cursor-none
-        `}
-        >
-          <SwordIcon></SwordIcon>
-        </Cursor>
-      </Card>
-    </>
+    <group>
+      {/* X axis (red) */}
+      <mesh position={[2, 0, 0]}>
+        <Text color="red" fontSize={0.5} anchorX="center" anchorY="middle">
+          X
+        </Text>
+      </mesh>
+
+      {/* Y axis (green) */}
+      <mesh position={[0, 2, 0]}>
+        <Text color="green" fontSize={0.5} anchorX="center" anchorY="middle">
+          Y
+        </Text>
+      </mesh>
+
+      {/* Z axis (blue) */}
+      <mesh position={[0, 0, 2]}>
+        <Text color="blue" fontSize={0.5} anchorX="center" anchorY="middle">
+          Z
+        </Text>
+      </mesh>
+    </group>
   );
 }
 
-createRoot(document.getElementById("root")!).render(<TestPage />);
+interface HourglassProps {
+  position: [number, number, number];
+  height: number;
+}
+function Hourglass({ height, position: [x, y, z] }: HourglassProps) {
+  return (
+    <group position={[x - height / 2, y, z]}>
+      <mesh>
+        <coneGeometry args={[0.5, 2, 32]} />
+        <meshPhysicalMaterial
+          color="skyblue"
+          transmission={0.9}
+          roughness={0.1}
+          thickness={0.2}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+export default function Page() {
+  return (
+    <div className="w-screen h-screen">
+      <Canvas>
+        <ambientLight intensity={0.5} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+        <pointLight position={[-10, -10, -10]} />
+        <PerspectiveCamera />
+        <OrbitControls enableRotate />
+        <Stars />
+        <axesHelper args={[5]} />
+        <group>
+          <mesh>
+            <Line
+              points={[
+                [0, 0, 0],
+                [1, 1, 0],
+                [-1, 2, 0],
+                [0, 0, 0],
+              ]}
+            ></Line>
+          </mesh>
+        </group>
+        <AxisLabels />
+      </Canvas>
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<Page />);
+createRoot(document.getElementById("root")!).render(<Page />);

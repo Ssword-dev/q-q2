@@ -1,17 +1,24 @@
 // React
-import React, { PropsWithChildren, ReactElement, useEffect } from "react";
+import React, {
+  PropsWithChildren,
+  ReactElement,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 // utilities
 import { cn } from "@/app/lib/utils";
 
 // Components
-import { Button } from "@/app/lib/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/app/lib/components/ui/card";
+import { Button } from "@/app/lib/dom/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/app/lib/dom/components/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/app/lib/components/ui/popover";
+} from "@/app/lib/dom/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -20,9 +27,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/app/lib/components/ui/form";
-import { Input } from "@/app/lib/components/ui/input";
-import { Separator } from "../lib/components/ui/separator";
+} from "@/app/lib/dom/components/ui/form";
+import { Input } from "@/app/lib/dom/components/ui/input";
+import { Separator } from "../lib/dom/components/ui/separator";
 
 // framer motion
 import { motion } from "framer-motion";
@@ -35,7 +42,13 @@ import {
   TabsList,
   TabsContent,
   TabsTrigger,
-} from "@/app/lib/components/ui/tabs";
+} from "@/app/lib/dom/components/ui/tabs";
+
+import * as BoxPrimitive from "@/app/lib/three/components/box";
+
+import * as THREE from "three";
+
+import { Canvas, useFrame } from "@react-three/fiber";
 
 // validation library
 import z from "zod";
@@ -63,6 +76,7 @@ import {
   CalendarDay,
   StatefulComponentProps,
 } from "./types";
+import GravitatedBall from "../lib/three/components/gravitated-ball";
 
 const yearSchema = z.preprocess(
   (inp) => {
@@ -397,23 +411,26 @@ export const CalendarTableBody = React.memo(function CalendarTableBody({
   );
 });
 
-export const CalendarTable = React.memo(function CalendarTable({
-  children,
-  isLoading = false,
-}: CalendarTableProps): ReactElement {
-  return (
-    <table
-      className={cn(
-        "w-full border border-seperate rounded-3xl border-gray-400",
-        {
-          "opacity-0 pointer-events-none absolute": isLoading,
-        }
-      )}
-    >
-      {children}
-    </table>
-  );
-});
+export const CalendarTable = React.memo(
+  React.forwardRef<HTMLTableElement, CalendarTableProps>(function CalendarTable(
+    { children, isLoading = false },
+    forwardedRef
+  ): ReactElement {
+    return (
+      <table
+        ref={forwardedRef}
+        className={cn(
+          "w-full border border-seperate rounded-3xl border-gray-400",
+          {
+            "opacity-0 pointer-events-none absolute": isLoading,
+          }
+        )}
+      >
+        {children}
+      </table>
+    );
+  })
+);
 
 export const CalendarTableWrapper = React.memo(function CalendarTableWrapper({
   children,
@@ -430,3 +447,73 @@ export const CalendarTableWrapper = React.memo(function CalendarTableWrapper({
     </div>
   );
 });
+
+export function CalendarBackground() {
+  return (
+    <>
+      <div
+        id="page-background"
+        className="absolute h-screen w-screen [&>canvas]:h-screen [&>canvas]:w-screen -z-10"
+      >
+        <Canvas camera={{ position: [0, 0, 10], fov: 75 }}></Canvas>
+      </div>
+    </>
+  );
+}
+
+export function CalendarPage(): ReactElement {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
+  const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
+  const [tableData, setTableData] = useState<Array<Array<CalendarDay | null>>>(
+    []
+  );
+  const cacheRef = useRef<Record<string, any>>({});
+  const state: CalendarPageState = useMemo(
+    () => ({
+      today,
+      currentMonth,
+      currentYear,
+      tableData,
+      setCurrentMonth,
+      setCurrentYear,
+      setTableData,
+      cacheRef,
+    }),
+    [
+      today,
+      currentMonth,
+      currentYear,
+      tableData,
+      setCurrentMonth,
+      setCurrentYear,
+      setTableData,
+      cacheRef,
+    ]
+  );
+
+  useEffect(() => {
+    goto(currentYear, currentMonth, state);
+    // i disabled this warning because well its false alarm here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      id="page"
+      className="h-full w-full flex flex-col justify-center items-center"
+    >
+      {/* Calendar container */}
+      <div className="flex flex-col justify-center items-center">
+        <CalendarControls state={state} />
+        <CalendarTableWrapper className="w-full">
+          <CalendarTable>
+            <CalendarTableHeader />
+            <CalendarTableBody tableData={tableData} />
+          </CalendarTable>
+        </CalendarTableWrapper>
+      </div>
+      <CalendarBackground />
+    </div>
+  );
+}

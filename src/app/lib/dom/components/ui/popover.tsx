@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { motion, AnimatePresence, AnimationDefinition } from "framer-motion";
 import { cn } from "@/app/lib/utils";
-import useViewport from "../../hooks/useViewport";
+import useViewport from "../../../shared/hooks/useViewport";
 
 interface PopoverContextValue {
   open: boolean;

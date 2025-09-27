@@ -12,8 +12,13 @@ dist
 dist-ssr
 *.local
 
+# yarn specific
+.yarn/
+!.yarn/sdks
+
 # Editor directories and files
 .vscode/*
+!.vscode/settings.json
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -26,7 +31,7 @@ dist-ssr
 # python
 
 .venv/
-src/python/__pycache__/
+src/python/**/__pycache__/
 
 # Secrets
 .env

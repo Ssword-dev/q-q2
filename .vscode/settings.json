@@ -1,0 +1,19 @@
+{
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "eslint.nodePath": ".yarn/sdks",
+  "eslint.options": {
+    "overrideConfigFile": "config/eslint.config.js"
+  },
+  "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
+  "prettier.configPath": "config/prettier.config.js",
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+
+  "python.terminal.activateEnvironment": true,
+  "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+}

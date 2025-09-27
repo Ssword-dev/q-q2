@@ -11,6 +11,7 @@ function indent(s: string, spaces: number) {
 async function main() {
   const cwd = process.cwd();
   const project = path.basename(cwd);
+  const viteConfig = path.resolve(cwd, "./config/vite.config.ts");
 
   await app()
     .ifDev((app) => {
@@ -36,7 +37,9 @@ async function main() {
           changeOrigin: true,
           pathRewrite: (p) => p.replace(/^\/(.+)/, `/api/$1`),
         })
-        .addVite({})
+        .addVite({
+          configFile: viteConfig,
+        })
         .use((_) => {
           console.log("Finished configuring app for development!");
         });
