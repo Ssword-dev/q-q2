@@ -1,15 +1,15 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Root variables */
-@theme inline {
+@theme {
   /* colors */
-  --color-primary: #000000; /* strong black */
+  --color-primary: #000000; /* black text */
   --color-accent: #4f46e5; /* subtle indigo accent */
   --color-secondary: #111111; /* dark neutral */
-  --color-background: #ffffff;
+  --color-background: #fafafa;
   --color-surface: #f9fafb; /* very light gray */
   --color-text: #111111;
-  --color-muted: #f3f4f6; /* softer gray */
+  --color-muted: #f3f4f6; /* soft gray */
   --color-muted-foreground: #6b7280; /* mid gray */
   --color-border: #e5e7eb;
   --color-destructive: #ffffff;
@@ -18,8 +18,8 @@
   --color-warning: #facc15; /* yellow */
 
   /* typography */
-  --font-family-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-family-mono: "Fira Code", monospace;
+  --font-family-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-family-mono: 'Fira Code', monospace;
   --font-size-base: 16px;
   --font-size-sm: 14px;
   --font-size-lg: 20px;
@@ -28,10 +28,10 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  @theme inline {
-    --color-primary: #ffffff; /* white text in dark mode */
-    --color-accent: #818cf8; /* slightly brighter accent */
-    --color-secondary: #e5e7eb; /* light neutral */
+  @theme {
+    --color-primary: #ededed; /* white text in dark mode */
+    --color-accent: #818cf8; /* subtle indigo */
+    --color-secondary: #e5e7eb;
     --color-background: #000000;
     --color-surface: #111111;
     --color-text: #f9fafb;
@@ -48,6 +48,23 @@
 @layer base {
   * {
     color: var(--color-text);
-    background-color: var(--color-background);
+    font-family: var(--font-family-sans);
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+  }
+
+  a:hover {
+    color: lighten(var(--color-accent), 15%);
+  }
+
+  code {
+    font-family: var(--font-family-mono);
+    background-color: var(--color-muted);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
   }
 }

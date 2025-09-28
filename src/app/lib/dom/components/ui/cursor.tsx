@@ -4,11 +4,11 @@ import React, {
   useEffect,
   useRef,
   useState,
-} from "react";
-import useCursor, { BoundTarget } from "@/app/lib/shared/hooks/useCursor";
-import { cn } from "@/app/lib/utils";
+} from 'react';
+import useCursor, { BoundTarget } from '@/app/lib/shared/hooks/useCursor';
+import { cn } from '@/app/lib/utils';
 
-interface CursorProps extends React.ComponentProps<"div"> {
+interface CursorProps extends React.ComponentProps<'div'> {
   bound?: BoundTarget;
 }
 
@@ -32,7 +32,7 @@ const Cursor = forwardRef<HTMLDivElement, CursorProps>(
       selfRef.current = val;
 
       if (ref) {
-        if (typeof ref === "function") {
+        if (typeof ref === 'function') {
           ref(val);
         } else {
           ref.current = val;
@@ -44,7 +44,7 @@ const Cursor = forwardRef<HTMLDivElement, CursorProps>(
       <div
         {...props}
         ref={setRef}
-        className={cn("absolute", className)}
+        className={cn('absolute', className)}
         style={{
           ...style,
           left: x,

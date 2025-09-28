@@ -1,19 +1,19 @@
-declare module "*.glsl" {
+declare module '*.glsl' {
   const contents: string;
   export default contents;
 }
 
-declare module "*.frag" {
+declare module '*.frag' {
   const contents: string;
   export default contents;
 }
 
-declare module "*.geom" {
+declare module '*.geom' {
   const contents: string;
   export default contents;
 }
 
-declare module "*.vert" {
+declare module '*.vert' {
   const contents: string;
   export default contents;
 }

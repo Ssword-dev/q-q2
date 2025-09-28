@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface Position2D {
   x: number;
@@ -94,7 +94,7 @@ type BoundTarget =
   | BoundTargetWithoutRef
   | React.RefObject<BoundTargetWithoutRef>;
 function useCursor(
-  bound: BoundTarget = typeof window !== "undefined" ? window : null,
+  bound: BoundTarget = typeof window !== 'undefined' ? window : null,
   debounce: number = 0
 ): Cursor {
   const [vec, setVec] = useState<Vector2D>({
@@ -113,15 +113,15 @@ function useCursor(
 
   useEffect(() => {
     // resolve bound dynamically
-    const target = bound && "current" in bound ? bound.current : bound;
+    const target = bound && 'current' in bound ? bound.current : bound;
 
     if (!target) return; // skip till next render if no target
 
     const controller = new AbortController();
     const { signal } = controller;
 
-    (target as Window).addEventListener("mousemove", handleMouse, { signal });
-    (target as Window).addEventListener("click", handleMouse, { signal });
+    (target as Window).addEventListener('mousemove', handleMouse, { signal });
+    (target as Window).addEventListener('click', handleMouse, { signal });
 
     return () => controller.abort();
   }, [bound, handleMouse]);

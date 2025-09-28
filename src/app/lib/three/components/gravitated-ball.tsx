@@ -1,7 +1,7 @@
-import { useFrame } from "@react-three/fiber";
-import { Sphere } from "@react-three/drei";
-import { useRef } from "react";
-import * as THREE from "three";
+import { useFrame } from '@react-three/fiber';
+import { Sphere } from '@react-three/drei';
+import { useRef } from 'react';
+import * as THREE from 'three';
 
 interface GravitatedBallProps extends React.ComponentProps<typeof Sphere> {
   gravity: number;

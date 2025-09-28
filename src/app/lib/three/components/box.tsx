@@ -1,11 +1,11 @@
-import React, { createContext, forwardRef, useContext, useRef } from "react";
-import * as THREE from "three";
-import "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { ator } from "../utils";
+import React, { createContext, forwardRef, useContext, useRef } from 'react';
+import * as THREE from 'three';
+import '@react-three/fiber';
+import { Html } from '@react-three/drei';
+import { ator } from '../utils';
 
 interface BoxProps {
-  color?: React.ComponentProps<"meshBasicMaterial">["color"];
+  color?: React.ComponentProps<'meshBasicMaterial'>['color'];
   height: number;
   width: number;
   depth: number;
@@ -22,7 +22,7 @@ const useBox = () => {
 
   if (!context) {
     throw new Error(
-      "`useBox()` can only be used by descendants of a box primitive root."
+      '`useBox()` can only be used by descendants of a box primitive root.'
     );
   }
 
@@ -68,7 +68,7 @@ function Face(props: React.PropsWithChildren<BoxFaceProps>) {
 
 function createFaceComponent(
   factory: (box: BoxProps) => BoxFaceProps,
-  name: string = "Component"
+  name: string = 'Component'
 ) {
   const Component: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
     const box = useBox();
@@ -90,7 +90,7 @@ const FrontFace = createFaceComponent(
     rot: [0, 0, 0],
     dim: [width, height],
   }),
-  "FrontFace"
+  'FrontFace'
 );
 
 const BackFace = createFaceComponent(
@@ -99,7 +99,7 @@ const BackFace = createFaceComponent(
     rot: [0, 0, 0],
     dim: [width, height],
   }),
-  "BackFace"
+  'BackFace'
 );
 
 const LeftFace = createFaceComponent(
@@ -108,7 +108,7 @@ const LeftFace = createFaceComponent(
     rot: [0, ator(90), 0],
     dim: [depth, height],
   }),
-  "LeftFace"
+  'LeftFace'
 );
 
 const RightFace = createFaceComponent(
@@ -117,7 +117,7 @@ const RightFace = createFaceComponent(
     rot: [0, ator(90), 0],
     dim: [depth, height],
   }),
-  "RightFace"
+  'RightFace'
 );
 
 const TopFace = createFaceComponent(
@@ -126,7 +126,7 @@ const TopFace = createFaceComponent(
     rot: [ator(90), 0, 0],
     dim: [width, depth],
   }),
-  "TopFace"
+  'TopFace'
 );
 
 const BottomFace = createFaceComponent(
@@ -135,7 +135,7 @@ const BottomFace = createFaceComponent(
     rot: [ator(90), 0, 0],
     dim: [width, depth],
   }),
-  "BottomFace"
+  'BottomFace'
 );
 
 export {

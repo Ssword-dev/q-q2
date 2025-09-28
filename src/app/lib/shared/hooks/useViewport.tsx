@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 function useViewport() {
   const [viewport, setViewport] = useState({
@@ -10,7 +10,7 @@ function useViewport() {
     const controller = new AbortController();
 
     window.addEventListener(
-      "resize",
+      'resize',
       () => {
         setViewport({
           width: window.innerWidth,

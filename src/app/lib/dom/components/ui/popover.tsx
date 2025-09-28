@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useEffect, useState, useRef } from "react";
-import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { motion, AnimatePresence, AnimationDefinition } from "framer-motion";
-import { cn } from "@/app/lib/utils";
-import useViewport from "../../../shared/hooks/useViewport";
+import * as React from 'react';
+import { useEffect, useState, useRef } from 'react';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { motion, AnimatePresence, AnimationDefinition } from 'framer-motion';
+import { cn } from '@/app/lib/utils';
+import useViewport from '../../../shared/hooks/useViewport';
 
 interface PopoverContextValue {
   open: boolean;
@@ -17,7 +17,7 @@ const usePopover = () => {
   const context = React.useContext(PopoverContext);
 
   if (!context) {
-    throw new Error("usePopover can only be used inside a <Popover />");
+    throw new Error('usePopover can only be used inside a <Popover />');
   }
 
   return context;
@@ -69,10 +69,10 @@ type BasePopoverContentProps = React.ComponentProps<
  * each side where the popover is displayed.
  */
 const origins = {
-  top: "origin-bottom",
-  bottom: "origin-top",
-  left: "origin-right",
-  right: "origin-left",
+  top: 'origin-bottom',
+  bottom: 'origin-top',
+  left: 'origin-right',
+  right: 'origin-left',
 } as const;
 
 const contentAnimationVariants = {
@@ -89,8 +89,8 @@ const contentAnimationVariants = {
 
 function PopoverContent({
   className,
-  align = "center",
-  side = "top",
+  align = 'center',
+  side = 'top',
   sideOffset = 4,
   children,
   ...props
@@ -116,7 +116,7 @@ function PopoverContent({
               exit="exit"
               transition={{ duration: 0.2 }}
               className={cn(
-                "bg-surface text-text z-50 w-72 rounded-md border p-4 shadow-md outline-hidden",
+                'bg-surface text-text z-50 w-72 rounded-md border p-4 shadow-md outline-hidden',
                 origins[side],
                 className
               )}

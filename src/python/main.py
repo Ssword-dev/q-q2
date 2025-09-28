@@ -33,4 +33,13 @@ def getHolidays(country: str, year: int):
     return jsonify(results)
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    import os
+
+    # flask.run if dev, serve if prod.
+
+    if (os.getenv('FLASK_ENV') == 'production'):
+        from waitress import serve
+        serve(app, host='0.0.0.0', port=5000)
+
+    else:
+        app.run(host='0.0.0.0', port=5000, debug=True)
