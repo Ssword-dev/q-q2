@@ -42,7 +42,7 @@ function CalendarPage(): ReactElement {
        * streams the calendar state down to its children. allows
        * me to useCalendarState instead of passing state deeply.
        */}
-      <Calendar stateRef={stateRef}>
+      <Calendar ref={stateRef}>
         {/* actual calendar container. */}
         <div className="flex flex-col justify-center items-center">
           <CalendarControls />
