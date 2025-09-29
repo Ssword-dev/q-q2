@@ -1,11 +1,15 @@
 // import path from "node:path";
 
 import path from 'path';
-import app from './app';
+import app, { App } from './app';
 import os from 'node:os';
 
 function indent(s: string, spaces: number) {
   return ' '.repeat(spaces) + s;
+}
+
+function applyRoutes(app: App) {
+  function handleHolidaysRoute(){}
 }
 
 async function main() {
