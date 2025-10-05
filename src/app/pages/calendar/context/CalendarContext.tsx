@@ -25,7 +25,7 @@ import { CalendarDay, Day } from "../types";
 
 async function fetchYear(year: number): Promise<any> {
   const res = await fetch(
-    `../api/php/v2/calendar/getYear?year=${encodeURIComponent(year)}`
+    `/api/php/calendar/getYear?year=${encodeURIComponent(year)}`
   );
   const year$1 = await res.json();
   return year$1;

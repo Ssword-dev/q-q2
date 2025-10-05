@@ -1,4 +1,4 @@
 {
   "extends": "./config/tsconfig.base.json",
-  "include": ["vite-env.d.ts", "glsl-env.d.ts", "**/*"]
+  "include": ["vite-env.d.ts", "glsl-env.d.ts", "**/*", "node_modules/dist"]
 }

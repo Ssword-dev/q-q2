@@ -1,26 +1,17 @@
-import express from 'express';
+import express, { RequestHandler } from "express";
 
-// proxy + caching
-import {
-  createProxyMiddleware,
-  proxyEventsPlugin,
-  Options as HTTPProxyMiddlewareOptions,
-} from 'http-proxy-middleware';
+// types for express packages.
+import type * as ServeProxy from "http-proxy-middleware";
 
-import { LRUCache as LRU } from 'lru-cache';
-
+import type * as ServeStatic from "serve-static";
 // vite
-import {
-  createServer as createViteServer,
-  InlineConfig,
-  ResolvedConfig,
-} from 'vite';
+import type * as Vite from "vite";
 
 // chokidar
-import { FSWatcher, watch as createWatcher, FSWatcherEventMap } from 'chokidar';
+import { FSWatcher, watch as createWatcher, FSWatcherEventMap } from "chokidar";
 
 // http
-import { Server } from 'node:http';
+import { Server } from "node:http";
 
 // sub-processing
 import {
@@ -28,177 +19,19 @@ import {
   ChildProcess,
   SpawnOptionsWithoutStdio,
   SpawnOptions,
-  exec,
-} from 'node:child_process';
-import EventEmitter from 'node:events';
-import { Service } from './service';
-import { ApplicationRequestHandler } from 'express-serve-static-core';
-import { ForwardMethod, GenericMethod } from './types';
+} from "node:child_process";
+import EventEmitter from "node:events";
+import { createLazyLoader } from "./loaders";
+import lazyImport from "./loader";
+import ServiceBuilder from "./builders/service-builder";
+import WatcherBuilder from "./builders/watcher-builder";
+import loader from "./loader";
+import Service from "./service";
+import { AppBase, ExpressForwardMethods, Applyable } from "./types";
+import ProcessBuilder from "./builders/process-builder";
 
-/**
- * The Builder base class, provides common methods for all
- * builder subclasses.
- */
-class Builder {
-  owner: App | null;
-  constructor(owner: App) {
-    this.owner = owner;
-  }
-
-  /**
-   * Finalizes the builder and returns the owner.
-   */
-  finalize() {
-    const owner = this.owner;
-    this.owner = null;
-    return owner!;
-  }
-}
-
-/**
- * # WatcherBuilder
- *
- * A WatcherBuilder is a description of a ***Filesystem Watcher***.
- *
- * ## Purpose
- *
- * The purpose of a WatcherBuilder is to provide a fluent API to configure
- * individual ***watchers**.
- *
- * ## Finalization
- *
- * The builder must be ***finalized*** for the builder to take effect.
- *
- * Note that after finalization, the builder will dispose the reference
- * to the owner and the corresponding builder result reference is released.
- *
- * ## Termination
- *
- * The watcher will be **terminated** at the **disposal** of the ***owner application.***
- */
-class WatcherBuilder extends Builder {
-  _watcher: FSWatcher | null;
-
-  constructor(
-    owner: App,
-    paths: string | string[],
-    options: Parameters<typeof createWatcher>[1]
-  ) {
-    super(owner);
-    this._watcher = createWatcher(paths, options);
-  }
-
-  addListener<K extends keyof FSWatcherEventMap>(
-    type: K,
-    handler: (...args: FSWatcherEventMap[K]) => void
-  ) {
-    this._watcher!.addListener<K>(type, handler as any);
-    return this;
-  }
-
-  finalize() {
-    const owner = this.owner;
-
-    if (!owner || !this._watcher) {
-      throw new Error('Cannot refinalize finalized builder.');
-    }
-
-    owner._watchers.push(this._watcher);
-    this._watcher = null;
-    super.finalize();
-    return owner;
-  }
-}
-
-/**
- * # ProcessBuilder
- *
- * A ProcessBuilder is a description of a ***Process***.
- *
- * ## Purpose
- *
- * The purpose of a ProcessBuilder is to provide a fluent API to configure
- * individual ***Process**.
- *
- * ## Finalization
- *
- * The builder must be ***finalized*** for the builder to take effect.
- *
- * Note that after finalization, the builder will dispose the reference
- * to the owner and the corresponding builder result reference is released.
- *
- * ## Termination
- *
- * The process will be **terminated** at the **disposal** of the ***owner application.***
- */
-class ProcessBuilder extends Builder {
-  _executable: string;
-  _args: string[];
-  _options: SpawnOptions;
-
-  constructor(owner: App, executable: string, args: string[]) {
-    super(owner);
-    this._executable = executable;
-    this._args = args;
-    this._options = {};
-  }
-
-  addOption<O extends keyof SpawnOptionsWithoutStdio>(
-    opt: O,
-    value: SpawnOptionsWithoutStdio[O]
-  ) {
-    this._options[opt] = value;
-    return this;
-  }
-
-  finalize() {
-    this.owner?._sub_processes.push(
-      spawn(this._executable, this._args, this._options)
-    );
-
-    return super.finalize();
-  }
-}
-
-/**
- * # ServiceBuilder
- *
- * A ServiceBuilder is a description of a ***Service***.
- *
- * ## Purpose
- *
- * The purpose of a WatcherBuilder is to provide a fluent API to configure
- * individual ***services**.
- *
- * ## Finalization
- *
- * The builder must be ***finalized*** for the builder to take effect.
- *
- * Note that after finalization, the builder will dispose the reference
- * to the owner and the corresponding builder result reference is released.
- *
- * ## Termination
- *
- * The service will be **terminated** at the **disposal** of the ***owner application.***
- */
-class ServiceBuilder extends Builder {
-  _service: string;
-
-  constructor(owner: App, service: string) {
-    super(owner);
-    this._service = service;
-  }
-
-  finalize() {
-    const owner = this.owner!;
-    owner.enterCritical(async () => {
-      const service = new Service(this._service);
-      owner._services.push(service);
-      await service.start();
-    });
-    return super.finalize();
-  }
-}
+const viteLazyImport = lazyImport<typeof import("vite")>("vite");
+const expressLazyImport = lazyImport<typeof import("express")>("express");
 
 /**
  * # App
@@ -229,13 +62,16 @@ class ServiceBuilder extends Builder {
  * Any ***builder*** object generated by API methods must be finalized to
  * take effect.
  */
-class App extends EventEmitter {
-  private _express: express.Express;
-  private _server: Server | null;
+class AppInstance
+  extends EventEmitter
+  implements AppBase, ExpressForwardMethods
+{
+  public _express: express.Express;
+  public _server: Server | null;
   public _watchers: FSWatcher[];
   public _sub_processes: ChildProcess[];
   public _services: Service[];
-  private _last_promise_1: Promise<any> | null;
+  public _last_promise_1: Promise<any> | null;
   /**
    * @inheritdoc
    */
@@ -259,12 +95,12 @@ class App extends EventEmitter {
 
   async dispose() {
     if (!this._server) {
-      throw new Error('Please call .listen before .dispose!');
+      throw new Error("Please call .listen before .dispose!");
     }
 
     await new Promise<void>((resolve, reject) => {
       if (!this._server) return resolve();
-      this._server.close((err) => (err ? reject(err) : resolve()));
+      this._server.close(err => (err ? reject(err) : resolve()));
     });
 
     for (const w of this._watchers) {
@@ -273,7 +109,7 @@ class App extends EventEmitter {
 
     for (const sp of this._sub_processes) {
       if (sp.killed) continue;
-      sp.kill('SIGTERM');
+      sp.kill("SIGTERM");
     }
 
     for (const s of this._services) {
@@ -290,8 +126,25 @@ class App extends EventEmitter {
    * @returns everything returns this or a builder. except dispose.
    * or other future methods.
    */
-  addProxy(route: string, options: HTTPProxyMiddlewareOptions) {
-    this._express.use(route, createProxyMiddleware(options));
+  proxy(route: string, options: ServeProxy.Options) {
+    this.enterCritical(async () => {
+      const { value: modulePromise } = loader<
+        typeof import("http-proxy-middleware")
+      >("http-proxy-middleware");
+      const { createProxyMiddleware } = await modulePromise;
+      this._express.use(route, createProxyMiddleware(options));
+    });
+    return this;
+  }
+
+  static(
+    route: string,
+    root: string,
+    options?: ServeStatic.ServeStaticOptions
+  ) {
+    this.enterCritical(async () => {
+      this._express.use(route, express.static(root, options));
+    });
     return this;
   }
 
@@ -331,15 +184,20 @@ class App extends EventEmitter {
    * @param opts The options for vite.
    * @returns also returns `this`.
    */
-  addVite(opts: Partial<Omit<InlineConfig & ResolvedConfig, 'server'>>) {
-    const vite_promise = createViteServer({
-      ...opts,
-      server: {
-        middlewareMode: true,
-      },
-    });
-
+  addVite(
+    opts: Partial<Omit<Vite.InlineConfig & Vite.ResolvedConfig, "server">>
+  ) {
     this.enterCritical(async () => {
+      const { value: viteModulePromise } =
+        loader<typeof import("vite")>("vite");
+      const { createServer: createViteServer } = await viteModulePromise;
+
+      const vite_promise = createViteServer({
+        ...opts,
+        server: {
+          middlewareMode: true,
+        },
+      });
       const vite = await vite_promise;
       vite.bindCLIShortcuts();
       this._express.use(vite.middlewares);
@@ -354,8 +212,8 @@ class App extends EventEmitter {
    * @param cb Action to run when development.
    * @returns also returns `this`.
    */
-  ifDev(cb: (app: App) => void) {
-    if (process.env.NODE_ENV === 'development') {
+  ifDev(cb: Applyable<this>) {
+    if (process.env.NODE_ENV === "development") {
       cb(this);
     }
     return this;
@@ -365,8 +223,8 @@ class App extends EventEmitter {
    * @param cb Action to run on production.
    * @returns also returns `this`.
    */
-  ifProd(cb: (app: App) => void) {
-    if (process.env.NODE_ENV === 'production') {
+  ifProd(cb: Applyable<this>) {
+    if (process.env.NODE_ENV === "production") {
       cb(this);
     }
 
@@ -374,10 +232,10 @@ class App extends EventEmitter {
   }
 
   /**
-   * @param cb Functin to apply to app.
+   * @param cb Function to apply to app.
    * @returns also returns `this`.
    */
-  apply(cb: (app: App) => void) {
+  apply(cb: Applyable<this>) {
     cb(this);
     return this;
   }
@@ -389,7 +247,7 @@ class App extends EventEmitter {
   bindLifecycle() {
     const arrow = this.dispose.bind(this);
 
-    process.on('SIGINT', arrow).on('SIGTERM', arrow);
+    process.on("SIGINT", arrow).on("SIGTERM", arrow);
     return this;
   }
 
@@ -452,14 +310,12 @@ class App extends EventEmitter {
     this._express.head(route, ...handlers);
     return this;
   }
+
+  // upgrades / evolution
+
+  express() {
+    return this; // this is already express compatible.
+  }
 }
 
-/**
- * @returns
- */
-function app() {
-  return new App();
-}
-
-export default app;
-export type { App };
+export default AppInstance;

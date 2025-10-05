@@ -85,9 +85,9 @@ function c_getChineseZodiacAnimal($year)
     return $chineseZodiacAnimals[($year - 1960) % 12];
 }
 
-function c_getHolidays($country, $subdiv, $year)
+function c_getHolidays($country, $state, $year)
 {
-    $url = "http://localhost:5000/api/holidays/$country/$year?subdiv=$subdiv";
+    $url = "http://localhost:4000/api/node/holidays/$year/$country?state=$state";
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
