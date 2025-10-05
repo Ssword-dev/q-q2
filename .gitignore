@@ -37,4 +37,6 @@ src/python/**/__pycache__/
 .env
 .env.*
 
-runtime/
+runtime/all_vc_redist_x86_x64
+runtime/all_vc_redist_x86_x64.zip
+runtime/Redis-x64-3.0.504.zip
