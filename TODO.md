@@ -1,2 +1,1 @@
 - Make PHP api return an already ready to render table matrix.
-- Make PHP holidays call the local node server insteadl
