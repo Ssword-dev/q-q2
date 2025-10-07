@@ -78,10 +78,6 @@ function c_getMonth($year, $month, $country = 'ph', $subdivision = null, $holida
     $currentDay = 1;
     $index = c_getWeekdayIndex($year, $month, 1);
 
-    for ($i = 0; $i <= $index; $i++) {
-        $meta_days[] = null; // pad. so that the client does not have to further compute anything.
-    }
-
     if (!$holidays) {
         $holidays = c_getHolidays($country, $subdivision, $year);
     }

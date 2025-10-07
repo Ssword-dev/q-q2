@@ -1,22 +1,23 @@
-import { Button } from '@/app/lib/dom/components/ui/button';
-import { Card, CardTitle, CardContent } from '@/app/lib/dom/components/ui/card';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Separator } from '@/app/lib/dom/components/ui/separator';
+import { Button } from "@/app/lib/dom/components/ui/button";
+import { Card, CardTitle, CardContent } from "@/app/lib/dom/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Separator } from "@/app/lib/dom/components/ui/separator";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@/app/lib/dom/components/ui/tabs';
-import { useForm, Form, Control } from 'react-hook-form';
-import CalendarControlFormField from './CalendarControlFormField';
-import { monthIndexes } from '../constants';
+} from "@/app/lib/dom/components/ui/tabs";
+import { useForm, Control } from "react-hook-form";
+import CalendarControlFormField from "./CalendarControlFormField";
+import { monthIndexes } from "../constants";
 import {
   CalendarBasicControlsSchema,
   CalendarBasicControlsSchemaInput,
-} from '../types';
-import calendarBasicControlsSchema from '../schemas/calendar-basic-controls-schema';
-import { useCalendarState } from '../context/CalendarContext';
+} from "../types";
+import calendarBasicControlsSchema from "../schemas/calendar-basic-controls-schema";
+import { useCalendarState } from "../context/CalendarContext";
+import { Form } from "@/app/lib/dom/components/ui/form";
 
 export default function CalendarControlModal() {
   const state = useCalendarState();
@@ -40,10 +41,10 @@ export default function CalendarControlModal() {
   }: CalendarBasicControlsSchema) => {
     let monthIndex;
 
-    if (typeof month === 'string') {
+    if (typeof month === "string") {
       monthIndex = monthIndexes[month];
     } else {
-      monthIndex = month;
+      monthIndex = month - 1; // users are going to input 1-12.
     }
 
     state.goto(year, monthIndex);
@@ -62,26 +63,6 @@ export default function CalendarControlModal() {
         <TabsContent value="basic">
           <CardTitle>Calendar Settings</CardTitle>
           <CardContent className="flex flex-col gap-6">
-            <Form {...form}>
-              <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
-                <CalendarControlFormField
-                  label="Year"
-                  name="year"
-                  control={control as unknown as Control}
-                />
-                <CalendarControlFormField
-                  label="Month"
-                  name="month"
-                  control={control as unknown as Control}
-                />
-                <Button type="submit">Submit</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </TabsContent>
-        <TabsContent value="advanced">
-          <CardTitle>Advanced Calendar Settings</CardTitle>
-          <CardContent>
             <Form {...form}>
               <form className="flex flex-col gap-4 pt-4" onSubmit={onSubmit}>
                 <CalendarControlFormField

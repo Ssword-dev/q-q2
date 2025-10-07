@@ -16,7 +16,7 @@ export default function CalendarControlButton({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
-        className="text-primary select-none shadow-md! active:shadow-none! transition-shadow duration-100 active:transition-shadow active:duration-100"
+        className="text-primary select-none shadow-md! active:shadow-none! transition-shadow duration-100 active:transition-shadow active:duration-100 cursor-pointer"
         onClick={() => state.setMonthRelative(offset)}
         disabled={disabled}
       >
