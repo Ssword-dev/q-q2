@@ -19,6 +19,7 @@ import { Calendar } from "./context/CalendarContext";
 import CalendarBackground from "./background";
 import ErrorBoundary from "@/app/lib/dom/utils/error-boundary";
 import ErrorBoundaryFallback from "./error";
+import HolidayPanel from "./holidays/HolidayPanel";
 
 function CalendarPage(): ReactElement {
   // connect to the state.
@@ -44,16 +45,22 @@ function CalendarPage(): ReactElement {
        */}
       <Calendar ref={stateRef}>
         {/* actual calendar container. */}
-        <div className="flex flex-col justify-center items-center">
-          <CalendarControls />
-          <CalendarTableWrapper className="w-full">
-            <CalendarTable>
-              <CalendarTableHeader />
-              <CalendarTableBody>
-                <CalendarTableData />
-              </CalendarTableBody>
-            </CalendarTable>
-          </CalendarTableWrapper>
+        <div className="flex flex-row justify-center px-2 gap-12 items-start w-4/5 h-4/5">
+          <div className="flex flex-col justify-center items-center w-1/2 h-full">
+            <CalendarControls />
+            <CalendarTableWrapper className="w-full">
+              <CalendarTable>
+                <CalendarTableHeader />
+                <CalendarTableBody>
+                  <CalendarTableData />
+                </CalendarTableBody>
+              </CalendarTable>
+            </CalendarTableWrapper>
+          </div>
+
+          <div className="flex flex-col justify-center items-center w-1/2 h-full">
+            <HolidayPanel />
+          </div>
         </div>
 
         {/* react-three animated background. */}

@@ -1,18 +1,7 @@
-import { CalendarDay } from '..';
-import CalendarDayCell from './CalendarDayCell';
-import CalendarHolidayCell from './CalendarHolidayCell';
-import EmptyCalendarDayCell from './EmptyCalendarDayCell';
+import { Day } from "../types";
+import CalendarDayCell from "./CalendarDayCell";
+import EmptyCalendarDayCell from "./EmptyCalendarDayCell";
 
-export default function CalendarDayTableCell({
-  day,
-}: {
-  day: CalendarDay | null;
-}) {
-  return !day ? (
-    <EmptyCalendarDayCell />
-  ) : day.isHoliday ? (
-    <CalendarHolidayCell {...day} />
-  ) : (
-    <CalendarDayCell {...day} />
-  );
+export default function CalendarDayTableCell({ day }: { day: Day | null }) {
+  return !day ? <EmptyCalendarDayCell /> : <CalendarDayCell {...day} />;
 }

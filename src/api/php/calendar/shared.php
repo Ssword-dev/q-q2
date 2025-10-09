@@ -11,114 +11,56 @@ function c_getWeekdayIndex($year, $month, $day)
     return (int) $date->format("w"); // 0=Sun, 1=Mon, ..., 6=Sat
 }
 
-function c_getMonthMatrix($year, $month, $country = 'ph', $subdivision = null, $holidays = null)
-{
-    $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-    $meta_days = [];
-    $currentDay = 1;
-    $index = c_getWeekdayIndex($year, $month, 1);
-
-    for ($i = 0; $i <= $index; $i++) {
-        $meta_days[] = null; // pad. so that the client does not have to further compute anything.
-    }
-
-    if (!$holidays) {
-        $holidays = c_getHolidays($country, $subdivision, $year);
-    }
-
-    // while loop (: could be done in for loop but this is required.
-    $limit = 7 * 6;
-    $y = 0; // y axis.
-    while (true) {
-        $x = 0; // x axis
-        $dt = new DateTimeImmutable("$year-$month-$currentDay");
-        $timestamp = (int) $dt->format('U');
-
-        $meta_day = [
-            'day' => $currentDay,
-            'timestamp' => $timestamp,
-            'index' => (
-                    // mod by 7 so its sunday then its 0,
-                    // basically this is faster than calling cal_* api.
-                (
-                    // index plus the current day. since not 0 based,
-                    // have to add -1 or $currentDay - 1
-                    $index + ($currentDay - 1)
-                )
-                % 7
-            )
-        ];
-
-        $maybeHolidayKey = $dt->format("Y-m-d");
-        $isHoliday = isset($holidays[$maybeHolidayKey]);
-
-        // add holiday metadata if applicable.
-        if ($isHoliday) {
-            $meta_day['holidayMetadata'] = $holidays[$maybeHolidayKey];
-        }
-
-        $meta_day['isHoliday'] = $isHoliday;
-        $meta_days[] = $meta_day;
-        $currentDay++;
-    }
-
-    return [
-        'year' => $year,
-        'month' => $month,
-        'baseIndex' => $index,
-        'days' => $meta_days
-    ];
-}
 
 
 function c_getMonth($year, $month, $country = 'ph', $subdivision = null, $holidays = null)
 {
-    $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-    $meta_days = [];
+    $numberOfDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+
+    // a whole matrix.
+    $meta_days = [
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+    ];
+
     $currentDay = 1;
     $index = c_getWeekdayIndex($year, $month, 1);
-
-    if (!$holidays) {
-        $holidays = c_getHolidays($country, $subdivision, $year);
-    }
-
+    $y = 0;
     // while loop (: could be done in for loop but this is required.
-    while ($currentDay <= $days) {
-        $dt = new DateTimeImmutable("$year-$month-$currentDay");
-        $timestamp = (int) $dt->format('U');
+    while ($y < 6) {
+        $x = 0;
+        while ($x < 7) {
+            // for the first row,
+            // if x is less than the index,
+            // then point x to the index.
+            if ($y === 0 && $x < $index) {
+                $x = $index;
+                continue;
+            }
 
-        $meta_day = [
-            'day' => $currentDay,
-            'timestamp' => $timestamp,
-            'index' => (
-                    // mod by 7 so its sunday then its 0,
-                    // basically this is faster than calling cal_* api.
-                (
-                    // index plus the current day. since not 0 based,
-                    // have to add -1 or $currentDay - 1
-                    $index + ($currentDay - 1)
-                )
-                % 7
-            )
-        ];
+            // if the current day is gteq to number of days,
+            // then break. limit has been reached.
+            if ($currentDay >= $numberOfDays) {
+                break;
+            }
 
-        $maybeHolidayKey = $dt->format("Y-m-d");
-        $isHoliday = isset($holidays[$maybeHolidayKey]);
+            $meta_days[$y][$x] = [
+                'day' => $currentDay,
+            ];
 
-        // add holiday metadata if applicable.
-        if ($isHoliday) {
-            $meta_day['holidayMetadata'] = $holidays[$maybeHolidayKey];
+            $currentDay++;
+            $x++;
         }
 
-        $meta_day['isHoliday'] = $isHoliday;
-        $meta_days[] = $meta_day;
-        $currentDay++;
+        $y++;
     }
 
     return [
-        'year' => $year,
-        'month' => $month,
-        'baseIndex' => $index,
+        'number_of_days' => $numberOfDays,
         'days' => $meta_days
     ];
 }
@@ -163,15 +105,15 @@ function c_getHolidays($country, $state, $year)
     return $data;
 }
 
-function c_getYear($country, $subdiv, $year)
+function c_getYear($country, $state, $year)
 {
     $meta_months = [];
     $month = 1;
     $numberOfDaysInFebruary = cal_days_in_month(CAL_GREGORIAN, 2, $year);
-    $holidays = c_getHolidays($country, $subdiv, $year);
+    $holidays = c_getHolidays($country, $state, $year);
 
     while ($month <= 12) {
-        $meta_months[] = c_getMonth($year, $month, $country, $subdiv, $holidays);
+        $meta_months[] = c_getMonth($year, $month, $country, $state, $holidays);
         $month++;
     }
 
@@ -182,5 +124,6 @@ function c_getYear($country, $subdiv, $year)
         'zodiac' => [
             'chinese' => c_getChineseZodiacAnimal($year)
         ],
+        'holidays' => c_getHolidays($country, $state, $year)
     ];
 }

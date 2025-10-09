@@ -9,7 +9,7 @@ const CalendarTableWrapper = React.memo(function CalendarTableWrapper({
   return (
     <div
       className={cn(
-        'relative flex justify-center items-start w-3/5 rounded-3xl',
+        'relative flex justify-center items-start w-4/5 rounded-3xl',
         className
       )}
     >
