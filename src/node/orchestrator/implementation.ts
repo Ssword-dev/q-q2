@@ -167,7 +167,7 @@ class AppInstance
    * the service.
    */
   addService(service: string) {
-    return new ServiceBuilder(this, service);
+    return new ServiceBuilder<this>(this, service);
   }
 
   /**

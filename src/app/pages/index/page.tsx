@@ -1,16 +1,21 @@
-import '../../tailwind.css';
-import { StrictMode, useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
+import "../../tailwind.css";
+import { StrictMode, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
 
-// React
-import { ReactElement } from 'react';
-import { Button } from '@/app/lib/dom/components/ui/button';
+import { Button } from "@/app/lib/dom/components/ui/button";
 
-// lucide. svg library.
-import { ArrowDown, ChevronDown, CogIcon, Layers, Wrench } from 'lucide-react';
-import { Card, CardContent, CardTitle } from '@/app/lib/dom/components/ui/card';
+// lucide. svg library. provides components for svg icons.
+// so like. i do not have to worry about needing svg icons..
+// lucide probably has the needed icon.
+import { ArrowDown, ChevronDown, CogIcon, Layers, Wrench } from "lucide-react";
+import { Card, CardContent, CardTitle } from "@/app/lib/dom/components/ui/card";
+import { useTemporalState } from "@/app/lib/shared/hooks/useTemporalState";
 
 function HeroSection() {
+  const [{ count }, setValue] = useTemporalState<{ count: number }>(
+    { count: 0 },
+    "x-home-page-state"
+  );
   return (
     <div className="flex flex-row h-screen w-screen" id="hero">
       {/** Split into 2 containers */}
@@ -31,6 +36,15 @@ function HeroSection() {
             <a href="#">
               <Layers className="stroke-text transition-colors duration-150 group-hover:stroke-fuchsia-300" />
               Services
+            </a>
+          </Button>
+          <Button asChild className="flex flex-row items-center gap-2 group">
+            <a
+              href="#"
+              onClick={() => setValue(({ count }) => ({ count: count + 1 }))}
+            >
+              <Layers className="stroke-text transition-colors duration-150 group-hover:stroke-fuchsia-300" />
+              {count}
             </a>
           </Button>
         </div>

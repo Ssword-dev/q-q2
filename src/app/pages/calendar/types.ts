@@ -5,9 +5,13 @@ export interface CalendarControlsProps {
   cache: Record<string, any>;
 }
 
-export interface HolidayDescription {
-  shortDescription: string;
-  longDescription: string;
+export interface Zodiac {
+  chinese: string;
+}
+
+export interface Holiday {
+  name: string;
+  type: "public" | "optional" | "observance";
 }
 
 export interface Day {
@@ -15,9 +19,22 @@ export interface Day {
   index: number;
 }
 
-export interface HolidayMetadata {
-  description: HolidayDescription;
-  name: string;
+export interface Month {
+  number_of_days: number;
+  days: Array<Array<Day>>;
+}
+
+export interface Year {
+  year: number;
+  leap_year: boolean;
+  months: Month[];
+  zodiac: Zodiac;
+  holidays: Record<string, Holiday>;
+}
+
+export interface Display {
+  currentYear: Year;
+  currentMonth: Month;
 }
 
 export interface CardTableBodyProps {
@@ -34,5 +51,5 @@ export interface CalendarTableWrapperProps extends React.PropsWithChildren {
   className?: string;
 }
 
-export * from './schemas/types';
-export * from './context/types';
+export * from "./schemas/types";
+export * from "./context/types";

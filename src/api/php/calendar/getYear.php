@@ -1,6 +1,6 @@
 <?php
 
-require "../../utils.php";
+require "../utils.php";
 require "./shared.php";
 
 

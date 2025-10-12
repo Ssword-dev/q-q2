@@ -40,12 +40,7 @@ async function handleHolidaysRoute(
   );
 
   // construct actual response.
-  const response = {
-    year,
-    country,
-    state,
-    holidays: holidayMappings,
-  };
+  const response = holidayMappings;
 
   res.json(response);
 }

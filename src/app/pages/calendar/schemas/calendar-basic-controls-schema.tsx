@@ -3,7 +3,6 @@ import { monthNames } from "../constants";
 
 const yearSchema = z.preprocess(
   inp => {
-    console.log(JSON.stringify(inp));
     if (typeof inp !== "string") {
       return inp;
     }

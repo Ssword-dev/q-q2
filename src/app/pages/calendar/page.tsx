@@ -1,5 +1,5 @@
 import "../../tailwind.css";
-import { StrictMode, useEffect, useRef } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 // React
@@ -13,6 +13,7 @@ import {
   CalendarTableHeader,
   CalendarTableBody,
   CalendarTableData,
+  CalendarTableSkeleton,
 } from "./table";
 import { CalendarState } from "./types";
 import { Calendar } from "./context/CalendarContext";
@@ -20,18 +21,19 @@ import CalendarBackground from "./background";
 import ErrorBoundary from "@/app/lib/dom/utils/error-boundary";
 import ErrorBoundaryFallback from "./error";
 import HolidayPanel from "./holidays/HolidayPanel";
+import {
+  HolidayList,
+  HolidayPanelListContent,
+  HolidayPanelSkeleton,
+} from "./holidays";
 
 function CalendarPage(): ReactElement {
   // connect to the state.
-  const stateRef = useRef<CalendarState>(null);
+  const [state, setState] = useState<CalendarState | null>(null);
 
   useEffect(() => {
-    if (!stateRef.current) return;
-
-    const state = stateRef.current;
-
-    state.goto(state.today.getFullYear(), state.today.getMonth());
-  }, []);
+    console.log(state);
+  }, [state]);
   return (
     // page container. this is what i actually work with.
     <div
@@ -43,23 +45,35 @@ function CalendarPage(): ReactElement {
        * streams the calendar state down to its children. allows
        * me to useCalendarState instead of passing state deeply.
        */}
-      <Calendar ref={stateRef}>
+      <Calendar ref={setState}>
         {/* actual calendar container. */}
         <div className="flex flex-row justify-center px-2 gap-12 items-start w-4/5 h-4/5">
           <div className="flex flex-col justify-center items-center w-1/2 h-full">
             <CalendarControls />
             <CalendarTableWrapper className="w-full">
-              <CalendarTable>
-                <CalendarTableHeader />
-                <CalendarTableBody>
-                  <CalendarTableData />
-                </CalendarTableBody>
-              </CalendarTable>
+              {!state?.display ? (
+                <CalendarTableSkeleton />
+              ) : (
+                <CalendarTable>
+                  <CalendarTableHeader />
+                  <CalendarTableBody>
+                    <CalendarTableData />
+                  </CalendarTableBody>
+                </CalendarTable>
+              )}
             </CalendarTableWrapper>
           </div>
 
           <div className="flex flex-col justify-center items-center w-1/2 h-full">
-            <HolidayPanel />
+            {!state?.display ? (
+              <HolidayPanelSkeleton />
+            ) : (
+              <HolidayPanel>
+                <HolidayList>
+                  <HolidayPanelListContent />
+                </HolidayList>
+              </HolidayPanel>
+            )}
           </div>
         </div>
 
