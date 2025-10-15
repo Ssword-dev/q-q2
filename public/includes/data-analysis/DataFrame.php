@@ -6,9 +6,10 @@ use InvalidArgumentException;
 use Iterator;
 use ArrayAccess;
 use Countable;
+use JsonSerializable;
 
 // Data analysis DataFrame
-class DataFrame implements ArrayAccess, Iterator, Countable, \JsonSerializable
+class DataFrame implements ArrayAccess, Iterator, Countable, JsonSerializable
 {
     /** @var array<string,Series> */
     private array $columns;
@@ -22,13 +23,13 @@ class DataFrame implements ArrayAccess, Iterator, Countable, \JsonSerializable
     /**
      * Create a new DataFrame
      * @param array<string,array> $data column name => column data pairs
-     * @param array|null $index Optional custom row labels
+     * @param array|null $index optional custom row labels
      */
     public function __construct(array $data = [], ?array $index = null)
     {
         // validate all columns have same length
         // because we should expect a rectangular table
-        // not an irregular table. Also ensure each column is
+        // not an irregular table. also ensure each column is
         // either an array or a Series so count() is safe.
         $lengths = [];
         foreach ($data as $name => $values) {
@@ -139,63 +140,6 @@ class DataFrame implements ArrayAccess, Iterator, Countable, \JsonSerializable
             throw new InvalidArgumentException("Column not found: $name");
         }
         unset($this->columns[$name]);
-    }
-
-    /**
-     * filter rows based on a condition.
-     * same as `$df->query()->where($fn)->finalize()`.
-     */
-    public function filter(callable $callback): DataFrame
-    {
-        $newData = [];
-        $newIndex = [];
-
-        foreach ($this->index as $i => $idx) {
-            $row = $this->row($idx);
-            if ($callback($row, $idx)) {
-                foreach ($this->columns as $name => $column) {
-                    $newData[$name][] = $column[$idx];
-                }
-                $newIndex[] = $idx;
-            }
-        }
-
-        return new self($newData, $newIndex);
-    }
-
-    /**
-     * apply a function to each column
-     */
-    public function apply(callable $callback): DataFrame
-    {
-        $newData = [];
-        foreach ($this->columns as $name => $column) {
-            $newData[$name] = $column->map($callback)->toArray();
-        }
-        return new self($newData, $this->index);
-    }
-
-    /**
-     * sort DataFrame by a column
-     */
-    public function sortBy(string $column, bool $ascending = true): DataFrame
-    {
-        if (!isset($this->columns[$column])) {
-            throw new InvalidArgumentException("Column not found: $column");
-        }
-
-        $sortColumn = $this->columns[$column]->toArray();
-        $indices = range(0, count($sortColumn) - 1);
-        array_multisort($sortColumn, $ascending ? SORT_ASC : SORT_DESC, $indices);
-
-        $newData = [];
-        foreach ($this->columns as $name => $series) {
-            $data = $series->toArray();
-            $newData[$name] = array_map(fn($i) => $data[$i], $indices);
-        }
-
-        $newIndex = array_map(fn($i) => $this->index[$i], $indices);
-        return new self($newData, $newIndex);
     }
 
     /**
@@ -410,11 +354,10 @@ class DataFrame implements ArrayAccess, Iterator, Countable, \JsonSerializable
         return $s;
     }
 
-    // Note: jsonSerialize() is implemented below for JsonSerializable support.
-
     /**
-     * Implement JsonSerializable so json_encode($dataFrame) returns rows array.
-     * Returns an array of rows; each row is an associative array column => value.
+     * implements JsonSerializable so json_encode($dataFrame) returns rows array.
+     * returns an array of rows; each row is an associative array column => value.
+     * so returns an array of json objects.
      * @return array<int, array<string,mixed>>
      */
     public function jsonSerialize(): mixed

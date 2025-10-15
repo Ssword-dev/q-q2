@@ -37,14 +37,25 @@ class Series implements ArrayAccess, Iterator, Countable
 
     // statitics.
 
+    /**
+     * 
+     * @return float
+     */
     public function mean(): float
     {
         if (empty($this->data)) {
             return 0.0;
         }
-        return array_sum($this->data) / count($this->data);
+
+        return (float) ($this->sum() / count($this->data));
     }
 
+    /**
+     * gets the median of the series.
+     * this is the combination of the two middle values
+     * if even, then the middle value if odd.
+     * @return float
+     */
     public function median(): float
     {
         if (empty($this->data)) {
@@ -63,10 +74,8 @@ class Series implements ArrayAccess, Iterator, Countable
     }
 
     /**
-     * Return the mode (most frequent value) of the series.
-     * Supports scalar values, arrays and objects (objects are counted by identity).
-     * Returns null for empty series, the single mode value if unique, or an array of modes when tied.
-     *
+     * returns null for empty series.
+     * returns the most frequently occuring item.
      * @return mixed|null
      */
     public function mode()
@@ -75,8 +84,8 @@ class Series implements ArrayAccess, Iterator, Countable
             return null;
         }
 
-        // the key to value array is because objects are not serializable.
-        // in a fast way.
+        // objects are not serializable in a fast way.
+        // so imma use this keyToValue table.
         $keyToValue = [];
         $occurrence = [];
 
@@ -113,23 +122,85 @@ class Series implements ArrayAccess, Iterator, Countable
         return count($modes) === 1 ? $modes[0] : $modes;
     }
 
+    public function variance()
+    {
+        $mean = $this->mean();
+        return array_reduce($this->data, function ($acc, $item) use ($mean) {
+            return $acc + pow($item - $mean, 2);
+        }, 0) / count($this->data);
+    }
+
+    /**
+     * @return float total absolute deviation.
+     */
+    public function tad()
+    {
+        $mean = $this->mean();
+        return (float) array_reduce($this->data, function ($acc, $item) use ($mean) {
+            return $acc + abs($item - $mean);
+        }, 0);
+    }
+
+    /**
+     * gets the standard deviation.
+     * @return float
+     */
+    public function std(): float
+    {
+        if (empty($this->data)) {
+            return 0.0; // no variance.
+        }
+
+        return (float) sqrt($this->variance());
+    }
+
+    /**
+     * @return float the mean of the total absolute deviation. or mean absolute deviation.
+     */
+    public function mad(): float
+    {
+        if (empty($this->data)) {
+            return 0.0; // no variance.
+        }
+
+        return (float) $this->tad() / count($this->data);
+    }
+
+
+    /**
+     * @return float the sum of all elements. is the sigma from i=0 to i=(|this|-1).
+     */
     public function sum(): float
     {
-        return array_sum($this->data);
+        return (float) array_sum($this->data);
     }
 
+    /**
+     * @return float the minimum value.
+     */
     public function min(): float
     {
-        return min($this->data);
+        return (float) min($this->data);
     }
 
+    /**
+     * @return float the maximum value.
+     */
     public function max(): float
     {
-        return max($this->data);
+        return (float) max($this->data);
     }
 
-    // Data Manipulation
+    // array-like methods.
+    // gives the convinience of array. but
+    // with the extra convinience of being a series.
+    // plus, this makes it javascript like (: big win.
 
+    /**
+     * like `Array.filter` in javascript.
+     * @param callable $callback
+     * @return Series
+     */
     public function filter(callable $callback): Series
     {
         $filtered = array_filter($this->data, $callback);
@@ -137,11 +208,20 @@ class Series implements ArrayAccess, Iterator, Countable
         return new Series(array_values($filtered), array_values($filteredIndex));
     }
 
+    /**
+     * like `Array.map` in javascript.
+     * @param callable $callback
+     * @return Series
+     */
     public function map(callable $callback): Series
     {
         return new Series(array_map($callback, $this->data), $this->index);
     }
 
+    /**
+     * @param bool $ascending when true, lowest value first. else, highest value first.
+     * @return Series a sorted series.
+     */
     public function sort(bool $ascending = true): Series
     {
         $data = $this->data;
@@ -151,7 +231,8 @@ class Series implements ArrayAccess, Iterator, Countable
     }
 
     // ArrayAccess
-
+    // magical methods that php internally calls
+    // when using array syntactic sugars. like indexing.
     public function offsetExists(mixed $offset): bool
     {
         return isset($this->data[$this->getDataIndex($offset)]);
@@ -185,6 +266,7 @@ class Series implements ArrayAccess, Iterator, Countable
     }
 
     // Iterator
+    // enables iteration using loops like foreach.
     public function current(): mixed
     {
         return $this->data[$this->position];
@@ -218,7 +300,7 @@ class Series implements ArrayAccess, Iterator, Countable
     }
 
     // Helper Methods
-
+    // used internally to not bloat the file.
     private function getDataIndex(mixed $offset): int
     {
         if (is_int($offset)) {
@@ -235,6 +317,11 @@ class Series implements ArrayAccess, Iterator, Countable
         return $idx;
     }
 
+    /**
+     * first n items.
+     * @param int $n is the number of items.
+     * @return Series a series containing the first n items.
+     */
     public function head(int $n): Series
     {
         return new Series(
@@ -251,22 +338,8 @@ class Series implements ArrayAccess, Iterator, Countable
         );
     }
 
-    public function std(): float
-    {
-        if (empty($this->data)) {
-            return 0.0;
-        }
-
-        $mean = $this->mean();
-        $variance = array_reduce($this->data, function ($carry, $item) use ($mean) {
-            return $carry + pow($item - $mean, 2);
-        }, 0) / count($this->data);
-
-        return sqrt($variance);
-    }
-
     /**
-     * Convert Series to array
+     * convert series to a normal array
      * @return array
      */
     public function toArray(): array
@@ -275,7 +348,7 @@ class Series implements ArrayAccess, Iterator, Countable
     }
 
     /**
-     * Get the index array
+     * get the index array
      * @return array
      */
     public function getIndex(): array
