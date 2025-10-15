@@ -1,0 +1,26 @@
+# DO NOT REMOVE LINE 2.
+Include conf/flags.conf
+Include conf/permissions.conf
+Include conf/modules.conf
+
+Define SERVER_ROOT "."
+
+# Core configurations
+Include conf/conf.d/core/server.conf
+Include conf/conf.d/core/optional.conf
+
+# Module configurations
+Include conf/conf.d/modules/php.conf
+Include conf/conf.d/modules/mime.conf
+Include conf/conf.d/modules/cgi.conf
+
+# Security configurations
+Include conf/conf.d/security/headers.conf
+
+# SSL configuration (if enabled)
+Include conf/ssl.conf
+
+# Proxy HTML configuration (if module is enabled)
+<IfModule proxy_html_module>
+    Include conf/extra/proxy-html.conf
+</IfModule>

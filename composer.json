@@ -1,0 +1,27 @@
+{
+    "name": "ssword-dev/q-q2",
+    "description": "Private project",
+    "type": "project",
+    "authors": [
+        {
+            "name": "ssword",
+            "email": "ssword.dev@gmail.com"
+        }
+    ],
+    "autoload": {
+    
+    },
+    "autoload-dev": {
+        "API\\": "src/api/php",
+        "API\\Tests\\": "tests/api/php"
+    },
+    "minimum-stability": "stable",
+    "require-dev": {
+        "pestphp/pest": "^4.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
