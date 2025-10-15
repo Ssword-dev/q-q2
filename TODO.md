@@ -1,1 +1,3 @@
-- Make PHP api return an already ready to render table matrix.
+- Finish the APIs for Multiplication table and Student Quiz Evaluation System.
+- Fix the design of everything.
+- Make everything modular and systematic
