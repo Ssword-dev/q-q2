@@ -96,6 +96,19 @@ interface _AppWithExpress
 type AppWithExpress<T extends App> = _AppWithExpress &
   Omit<T, keyof _AppWithExpress>;
 
+interface ProcessHandleOptions {
+  customCleanup: () => Promise<void>;
+}
+
+interface ProcessHandle {
+  process: NodeJS.Process;
+
+  // some other options.
+  // for like apache cleanup or some other
+  // stuff.
+  handleOptions: ProcessHandleOptions;
+}
+
 export type {
   App,
   AppBase,
@@ -104,4 +117,6 @@ export type {
   ExpressForwardMethods,
   ExpressHandle,
   _AppWithExpress as __INTERNAL_APP_WITH_EXPRESS_INTERFACE_DO_NOT_TOUCH,
+  ProcessHandle,
+  ProcessHandleOptions,
 };

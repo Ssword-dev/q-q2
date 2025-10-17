@@ -27,7 +27,7 @@ async function fetchYear(year: number): Promise<Year> {
   const res = await fetch(
     // ! important to encode the year to avoid passing invalid
     // ! urls.
-    `/api/php/calendar/getYear?year=${encodeURIComponent(year)}`
+    `/api/calendar/getYear.php?year=${encodeURIComponent(year)}`
   );
 
   // * for those reading the code, wondering why i named it

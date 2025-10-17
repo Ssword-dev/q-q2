@@ -2,7 +2,6 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import glsl from "vite-plugin-glsl";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -25,19 +24,6 @@ export default defineConfig({
     }),
     tailwindcss(),
     react(),
-    ...viteStaticCopy({
-      targets: [
-        {
-          src: "src/api/php",
-          dest: "./api",
-        },
-        // copy runtimes.
-        {
-          src: "runtime",
-          dest: ".",
-        },
-      ],
-    }),
   ],
   build: {
     outDir: "dist/app",

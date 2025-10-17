@@ -1,10 +1,8 @@
 import { defineConfig, Plugin } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import glsl from "vite-plugin-glsl";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import dotenv from "dotenv";
 import path from "path";
+import { builtinModules } from "module";
 
 // Default to development if NODE_ENV not set
 const env = process.env.NODE_ENV || "development";
@@ -19,6 +17,10 @@ const cwd = process.cwd();
 
 // https://vite.dev/config/
 export default defineConfig({
+  ssr: {
+    external: [],
+    noExternal: true,
+  },
   plugins: [
     ...viteStaticCopy({
       targets: [
@@ -41,9 +43,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         // server bundle. mostly just server orchestrator.
+        app: path.resolve(cwd, "src/node/app.ts"),
         server: path.resolve(cwd, "src/node/server.ts"),
       },
-      external: ["fs", "path", "url", "events", "child_process", "stream"],
+      external: id => builtinModules.includes(id),
       output: {
         entryFileNames: "[name].js",
         chunkFileNames: "assets/[name]-[hash].js",

@@ -30,9 +30,6 @@ import Service from "./service";
 import { AppBase, ExpressForwardMethods, Applyable } from "./types";
 import ProcessBuilder from "./builders/process-builder";
 
-const viteLazyImport = lazyImport<typeof import("vite")>("vite");
-const expressLazyImport = lazyImport<typeof import("express")>("express");
-
 /**
  * # App
  *
@@ -177,7 +174,7 @@ class AppInstance
    * @returns A subprocess builder that can be used to configure the subprocess further.
    */
   addSubprocess(executable: string, args: string[]) {
-    return new ProcessBuilder(this, executable, args);
+    return new ProcessBuilder<AppInstance>(this, executable, args);
   }
 
   /**
