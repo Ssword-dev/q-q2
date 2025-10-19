@@ -1,8 +1,8 @@
 import { Button } from "@/app/lib/dom/components/ui/button";
-import { motion } from "framer-motion";
 import { PropsWithChildren } from "react";
 import { useCalendarState } from "../context/CalendarContext";
 
+// * button used for next / previous actions
 export default function CalendarControlButton({
   offset = 1,
   disabled = false,
@@ -10,18 +10,12 @@ export default function CalendarControlButton({
 }: PropsWithChildren<{ offset: number; disabled: boolean }>) {
   const state = useCalendarState();
   return (
-    <Button asChild>
-      <motion.button
-        initial={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
-        className="text-primary select-none shadow-md! active:shadow-none! transition-shadow duration-100 active:transition-shadow active:duration-100 cursor-pointer"
-        onClick={() => state.setMonthRelative(offset)}
-        disabled={disabled}
-      >
-        {children}
-      </motion.button>
+    <Button
+      className="text-primary select-none shadow-none hover:transition-all hover:duration-200 hover:three-dimensional hover:depth-xs active:depth-none! transition-shadow duration-100 active:transition-shadow active:duration-100 cursor-pointer"
+      onClick={() => state.setMonthRelative(offset)}
+      disabled={disabled}
+    >
+      {children}
     </Button>
   );
 }
